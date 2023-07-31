@@ -31,16 +31,31 @@ pub fn infer_type(ctx: Ctx, term: Term) -> Result(Type, String) {
           check_type(ctx, arg, param_ty)
           |> result.replace(body_ty)
         }
-        Ok(ty) -> Error("expected\n" <> inspect(fun) <> "to be a function, found:\n" <> inspect(ty))
+        Ok(ty) ->
+          Error(
+            "expected\n" <> inspect(fun) <> "to be a function, found:\n" <> inspect(
+              ty,
+            ),
+          )
         e -> e
       }
     }
-    Abs(_, _) -> Error("functions need to have their types annotated:\n" <> inspect(term))
+    Abs(_, _) ->
+      Error("functions need to have their types annotated:\n" <> inspect(term))
     Const(True) | Const(False) -> Ok(BoolT)
     If(t1, t2, t3) -> {
-      case check_type(ctx, t1, BoolT), infer_type(ctx, t2), infer_type(ctx, t3) {
+      case
+        check_type(ctx, t1, BoolT),
+        infer_type(ctx, t2),
+        infer_type(ctx, t3)
+      {
         Ok(_), Ok(ty2), Ok(ty3) if ty2 == ty3 -> Ok(ty2)
-        Ok(_), Ok(ty2), Ok(ty3) if ty2 != ty3 -> Error("both then and else branches must have the same type:\n" <> inspect(term))
+        Ok(_), Ok(ty2), Ok(ty3) if ty2 != ty3 ->
+          Error(
+            "both then and else branches must have the same type:\n" <> inspect(
+              term,
+            ),
+          )
         Error(e), _, _ -> Error(e)
         _, Error(e), _ -> Error(e)
         _, _, Error(e) -> Error(e)
@@ -61,7 +76,12 @@ pub fn check_type(ctx: Ctx, term: Term, ty: Type) -> Result(Type, String) {
     _, _ -> {
       case infer_type(ctx, term) {
         Ok(inferred_ty) if inferred_ty == ty -> Ok(ty)
-        Ok(inferred_ty) -> Error("type mismatch, expected:\n" <> inspect(term) <> "\nto have the type:\n" <> inspect(ty) <> "\nfound:\n" <> inspect(inferred_ty))
+        Ok(inferred_ty) ->
+          Error(
+            "type mismatch, expected:\n" <> inspect(term) <> "\nto have the type:\n" <> inspect(
+              ty,
+            ) <> "\nfound:\n" <> inspect(inferred_ty),
+          )
         e -> e
       }
     }
