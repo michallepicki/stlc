@@ -4,7 +4,7 @@ import gleam/string.{inspect}
 
 pub type Term {
   Var(name: String)
-  App(term: Term, arg: Term)
+  App(fun: Term, arg: Term)
   Abs(param: String, body: Term)
   Const(value: Bool)
   If(condition: Term, then: Term, else: Term)
@@ -25,13 +25,13 @@ pub fn infer_type(ctx: Ctx, term: Term) -> Result(Type, String) {
       map.get(ctx, name)
       |> result.replace_error("undefined variable: " <> name)
     }
-    App(t1, arg) -> {
-      case infer_type(ctx, t1) {
+    App(fun, arg) -> {
+      case infer_type(ctx, fun) {
         Ok(Fun(param_ty, body_ty)) -> {
           check_type(ctx, arg, param_ty)
           |> result.replace(body_ty)
         }
-        Ok(ty) -> Error("expected\n" <> inspect(t1) <> "to be a function, found:\n" <> inspect(ty))
+        Ok(ty) -> Error("expected\n" <> inspect(fun) <> "to be a function, found:\n" <> inspect(ty))
         e -> e
       }
     }
@@ -61,7 +61,7 @@ pub fn check_type(ctx: Ctx, term: Term, ty: Type) -> Result(Type, String) {
     _, _ -> {
       case infer_type(ctx, term) {
         Ok(inferred_ty) if inferred_ty == ty -> Ok(ty)
-        Ok(_) -> Error("type mismatch, expected:\n" <> inspect(term) <> "\nto have the type:\n" <> inspect(ty) <> "\nfound:\n" <> inspect(ty))
+        Ok(inferred_ty) -> Error("type mismatch, expected:\n" <> inspect(term) <> "\nto have the type:\n" <> inspect(ty) <> "\nfound:\n" <> inspect(inferred_ty))
         e -> e
       }
     }
